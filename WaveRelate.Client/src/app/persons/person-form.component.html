@@ -1,0 +1,57 @@
+<section class="person-form card shadow-sm border-0 p-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-4 gap-3">
+    <div>
+      <h2 class="mb-1">{{ isNew ? 'New person' : 'Edit person' }}</h2>
+      <p class="text-muted mb-0">Add full profile details and keep contact information accurate.</p>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-muted">Loading...</div>
+
+  <form *ngIf="!loading" #personForm="ngForm" (ngSubmit)="save(personForm)">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">First name</label>
+        <input required class="form-control" [(ngModel)]="model.firstName" name="firstName" #firstName="ngModel" />
+        <div *ngIf="firstName.invalid && firstName.touched" class="invalid-feedback d-block">First name is required.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Last name</label>
+        <input required class="form-control" [(ngModel)]="model.lastName" name="lastName" #lastName="ngModel" />
+        <div *ngIf="lastName.invalid && lastName.touched" class="invalid-feedback d-block">Last name is required.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" [(ngModel)]="model.email" name="email" #email="ngModel" />
+        <div *ngIf="email.invalid && email.touched" class="invalid-feedback d-block">Enter a valid email address.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Phone</label>
+        <input type="tel" pattern="[0-9()+\-\s]*" class="form-control" [(ngModel)]="model.phone" name="phone" #phone="ngModel" />
+        <div *ngIf="phone.invalid && phone.touched" class="invalid-feedback d-block">Enter a valid phone number.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Gender</label>
+        <select class="form-select" [(ngModel)]="model.gender" name="gender">
+          <option value="">Choose gender</option>
+          <option *ngFor="let gender of genderOptions" [value]="gender">{{ gender }}</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Date of birth</label>
+        <input type="date" class="form-control" [(ngModel)]="model.dateOfBirth" name="dateOfBirth" />
+      </div>
+      <div class="col-12">
+        <label class="form-label">Notes</label>
+        <textarea class="form-control" rows="4" [(ngModel)]="model.notes" name="notes"></textarea>
+      </div>
+    </div>
+
+    <div *ngIf="error" class="alert alert-danger mt-4">{{ error }}</div>
+
+    <div class="d-flex gap-2 mt-4">
+      <button type="submit" class="btn btn-primary" [disabled]="saving || personForm.invalid">{{ saving ? 'Saving…' : 'Save' }}</button>
+      <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="cancel()">Cancel</button>
+    </div>
+  </form>
+</section>

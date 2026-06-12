@@ -1,0 +1,28 @@
+.persons { max-width: 1080px; margin: 0 auto; }
+
+.persons .form-control {
+  min-width: 220px;
+}
+
+.list-group-item {
+  transition: background-color 0.15s ease;
+}
+
+.list-group-item:hover {
+  background-color: var(--surface-hover);
+}
+
+.list-group-item-action:hover,
+.list-group-item-action:focus {
+  color: var(--text-primary);
+}
+
+.person-info {
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-group .btn {
+  min-width: 3.75rem;
+}

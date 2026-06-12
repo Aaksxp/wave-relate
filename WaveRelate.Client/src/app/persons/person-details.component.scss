@@ -1,0 +1,104 @@
+.person-details { max-width: 1080px; margin: 0 auto; }
+.person-details .card {
+  border-radius: 1rem;
+}
+
+.person-details .form-label {
+  font-weight: 600;
+}
+
+.person-details .list-unstyled li {
+  padding: 0.75rem 0;
+}
+
+.person-details .card-body {
+  padding: 1.5rem;
+}
+
+.person-details .alert {
+  margin-bottom: 0;
+}
+
+.person-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--divider);
+}
+
+.person-chip:last-child {
+  border-bottom: none;
+}
+
+.chip-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 0.25rem 0.25rem;
+  border-radius: 0.5rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.chip-link:hover {
+  background-color: var(--accent-soft);
+}
+
+.chip-avatar {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.chip-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.chip-sublabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.chip-remove {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  line-height: 1;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.chip-remove:hover {
+  color: #dc2626;
+  background-color: rgba(220, 38, 38, 0.08);
+}

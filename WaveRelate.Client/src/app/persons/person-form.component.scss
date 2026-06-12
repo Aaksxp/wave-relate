@@ -1,0 +1,13 @@
+.person-form {
+  max-width: 1080px;
+  margin: 0 auto;
+  border-radius: 1rem;
+}
+
+.person-form .form-label {
+  font-weight: 600;
+}
+
+.person-form .invalid-feedback {
+  color: #e03131;
+}
