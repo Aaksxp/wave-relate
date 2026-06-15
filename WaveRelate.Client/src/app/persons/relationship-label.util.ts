@@ -239,14 +239,23 @@ export function getRelationshipLabel(path: RelationPath, gender?: string): strin
   const genderKey: GenderKey = g === 'male' ? 'male' : g === 'female' ? 'female' : undefined;
 
   const canonical = canonicalize(path.steps);
+  const key = canonical.join('-');
 
-  if (canonical.join('-') === 'spouse') {
-    return genderKey === 'male' ? 'Husband' : genderKey === 'female' ? 'Wife' : 'Spouse';
+  switch (key) {
+    case 'spouse':
+      return genderKey === 'male' ? 'Husband' : genderKey === 'female' ? 'Wife' : 'Spouse';
+    case 'spouse-parent':
+      return genderKey === 'male' ? 'Father-in-law' : genderKey === 'female' ? 'Mother-in-law' : 'Parent-in-law';
+    case 'spouse-sibling':
+    case 'sibling-spouse':
+      return genderKey === 'male' ? 'Brother-in-law' : genderKey === 'female' ? 'Sister-in-law' : 'Sibling-in-law';
+    case 'child-spouse':
+      return genderKey === 'male' ? 'Son-in-law' : genderKey === 'female' ? 'Daughter-in-law' : 'Child-in-law';
   }
 
-  // Relations by marriage (e.g. a step-parent, an in-law, an uncle's wife)
-  // are labeled the same as the equivalent blood relation, using the
-  // target's own gender.
+  // Step-relations (parent's spouse, spouse's child, parent-spouse-child, etc.)
+  // and other relations by marriage fall back to the equivalent blood-relation
+  // label, using the target's own gender.
   let core = canonical;
   if (core[0] === 'spouse') core = core.slice(1);
   else if (core[core.length - 1] === 'spouse') core = core.slice(0, -1);
