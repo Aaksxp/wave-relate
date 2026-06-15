@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService, Person, PersonCategory } from '../api.service';
-import { computeRelationPaths, getRelationshipLabel, GraphEdge } from './relationship-label.util';
+import { computeRelationPaths, getRelationshipBucket, getRelationshipLabel, GraphEdge } from './relationship-label.util';
 
 interface Relationship {
   id: number;
@@ -67,8 +67,19 @@ export class PersonDetailsComponent {
     this.api.getPerson(id).subscribe({
       next: p => {
         this.person = p;
-        this.loadRelationships(id);
         this.loadAllPeople(id);
+        this.refreshFamily(id);
+      },
+      error: () => this.loading = false
+    });
+  }
+
+  refreshFamily(id: number) {
+    this.loading = true;
+    this.api.getRelationshipsForPerson(id).subscribe({
+      next: r => {
+        this.relationships = r;
+        this.mapRelationshipCategories(r, id);
         this.loadExtendedFamily(id);
       },
       error: () => this.loading = false
@@ -85,37 +96,52 @@ export class PersonDetailsComponent {
           relationshipType: Number(edge.relationshipType)
         }));
 
-        const directIds = new Set<number>();
-        for (const edge of edges) {
-          if (edge.sourceId === id) directIds.add(edge.targetId);
-          if (edge.targetId === id) directIds.add(edge.sourceId);
-        }
+        const directIds = new Set<number>([
+          ...this.parents.map(p => p.person.id),
+          ...this.children.map(p => p.person.id),
+          ...this.spouses.map(p => p.person.id),
+          ...this.siblings.map(p => p.person.id)
+        ]);
 
         const relationPaths = computeRelationPaths(edges, id);
-        this.extended = nodes
-          .filter(node => node.id !== id && !directIds.has(node.id))
-          .map(node => {
-            const path = relationPaths.get(node.id);
-            return { ...node, label: path ? getRelationshipLabel(path, node.gender) : 'Extended family' };
-          });
-      },
-      error: e => console.error(e)
-    });
-  }
+        this.extended = [];
 
-  loadRelationships(id: number) {
-    this.api.getRelationshipsForPerson(id).subscribe({
-      next: r => {
-        this.relationships = r;
-        this.mapRelationshipCategories(r, id);
+        for (const node of nodes) {
+          if (node.id === id || directIds.has(node.id)) continue;
+
+          const path = relationPaths.get(node.id);
+          if (!path) {
+            this.extended.push({ ...node, label: 'Extended family' });
+            continue;
+          }
+
+          const bucket = getRelationshipBucket(path);
+          const label = getRelationshipLabel(path, node.gender);
+          const item: RelatedPerson = { relationshipId: 0, person: node, label };
+
+          switch (bucket) {
+            case 'parent': this.parents.push(item); break;
+            case 'child': this.children.push(item); break;
+            case 'spouse': this.spouses.push(item); break;
+            case 'sibling': this.siblings.push(item); break;
+            default: this.extended.push({ ...node, label });
+          }
+        }
+
         this.loading = false;
       },
-      error: () => this.loading = false
+      error: e => { console.error(e); this.loading = false; }
     });
   }
 
   loadAllPeople(currentPersonId: number) {
-    this.api.getPeople().subscribe({ next: p => { this.allPeople = p.filter(person => person.id !== currentPersonId); } });
+    this.api.getPeople().subscribe({
+      next: p => {
+        this.allPeople = p
+          .filter(person => person.id !== currentPersonId)
+          .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+      }
+    });
   }
 
   private mapRelationshipCategories(rels: Relationship[], currentPersonId: number) {
@@ -197,7 +223,7 @@ export class PersonDetailsComponent {
 
     this.api.createRelationship(payload).subscribe({
       next: () => {
-        this.loadRelationships(this.person!.id);
+        this.refreshFamily(this.person!.id);
         this.newRelatedId = null;
         this.newType = 1;
         this.newSiblingOrder = 'unknown';
@@ -213,7 +239,7 @@ export class PersonDetailsComponent {
 
   deleteRelationship(id: number) {
     if (!confirm('Remove this relationship?')) return;
-    this.api.deleteRelationship(id).subscribe({ next: () => { if (this.person) this.loadRelationships(this.person.id); }, error: e => console.error(e) });
+    this.api.deleteRelationship(id).subscribe({ next: () => { if (this.person) this.refreshFamily(this.person.id); }, error: e => console.error(e) });
   }
 
   navigateToPerson(id: number) {
@@ -225,7 +251,7 @@ export class PersonDetailsComponent {
   }
 
   goBack() {
-    this.router.navigate([this.person?.category === PersonCategory.Friend ? '/friends' : '/family']);
+    this.router.navigate([this.person?.category === PersonCategory.Friend ? '/friends' : '/relatives']);
   }
 
   getInitials(person: Person): string {

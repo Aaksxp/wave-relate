@@ -239,33 +239,44 @@ export function getRelationshipLabel(path: RelationPath, gender?: string): strin
   const genderKey: GenderKey = g === 'male' ? 'male' : g === 'female' ? 'female' : undefined;
 
   const canonical = canonicalize(path.steps);
-  const key = canonical.join('-');
 
-  switch (key) {
-    case 'spouse':
-      return genderKey === 'male' ? 'Husband' : genderKey === 'female' ? 'Wife' : 'Spouse';
-    case 'parent-spouse':
-      return genderKey === 'male' ? 'Step-father' : genderKey === 'female' ? 'Step-mother' : 'Step-parent';
-    case 'spouse-parent':
-      return genderKey === 'male' ? 'Father-in-law' : genderKey === 'female' ? 'Mother-in-law' : 'Parent-in-law';
-    case 'spouse-sibling':
-    case 'sibling-spouse':
-      return genderKey === 'male' ? 'Brother-in-law' : genderKey === 'female' ? 'Sister-in-law' : 'Sibling-in-law';
-    case 'spouse-child':
-      return genderKey === 'male' ? 'Step-son' : genderKey === 'female' ? 'Step-daughter' : 'Step-child';
-    case 'child-spouse':
-      return genderKey === 'male' ? 'Son-in-law' : genderKey === 'female' ? 'Daughter-in-law' : 'Child-in-law';
-    case 'parent-spouse-child':
-    case 'child-spouse-parent':
-      return genderKey === 'male' ? 'Step-brother' : genderKey === 'female' ? 'Step-sister' : 'Step-sibling';
+  if (canonical.join('-') === 'spouse') {
+    return genderKey === 'male' ? 'Husband' : genderKey === 'female' ? 'Wife' : 'Spouse';
   }
 
-  // Relations by marriage (e.g. an uncle's wife, a cousin's husband) are
-  // labeled the same as the equivalent blood relation, using the target's
-  // own gender.
+  // Relations by marriage (e.g. a step-parent, an in-law, an uncle's wife)
+  // are labeled the same as the equivalent blood relation, using the
+  // target's own gender.
   let core = canonical;
   if (core[0] === 'spouse') core = core.slice(1);
   else if (core[core.length - 1] === 'spouse') core = core.slice(0, -1);
 
   return categorize(core, genderKey, path.siblingOrder);
+}
+
+export type RelationshipBucket = 'parent' | 'child' | 'spouse' | 'sibling' | 'extended';
+
+/**
+ * Buckets a relation path into one of the primary relationship categories
+ * (parent/child/spouse/sibling) or 'extended' for anything further removed.
+ * Used to decide whether a family-tree member belongs in the Parents/
+ * Children/Spouse/Siblings cards or the Extended family list.
+ */
+export function getRelationshipBucket(path: RelationPath): RelationshipBucket {
+  const canonical = canonicalize(path.steps);
+  if (canonical.length === 0) return 'extended';
+
+  if (canonical.join('-') === 'spouse') return 'spouse';
+
+  let core = canonical;
+  if (core[0] === 'spouse') core = core.slice(1);
+  else if (core[core.length - 1] === 'spouse') core = core.slice(0, -1);
+
+  if (core.length === 1) {
+    if (core[0] === 'parent') return 'parent';
+    if (core[0] === 'child') return 'child';
+    if (core[0] === 'sibling') return 'sibling';
+  }
+
+  return 'extended';
 }

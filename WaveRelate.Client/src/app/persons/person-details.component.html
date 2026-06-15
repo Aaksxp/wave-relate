@@ -48,7 +48,7 @@
                 <span class="chip-sublabel">{{ item.label }}</span>
               </span>
             </button>
-            <button type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
+            <button *ngIf="item.relationshipId" type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
           </div>
         </div>
       </div>
@@ -66,7 +66,7 @@
                 <span class="chip-sublabel">{{ item.label }}</span>
               </span>
             </button>
-            <button type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
+            <button *ngIf="item.relationshipId" type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
           </div>
         </div>
       </div>
@@ -84,7 +84,7 @@
                 <span class="chip-sublabel">{{ item.label }}</span>
               </span>
             </button>
-            <button type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
+            <button *ngIf="item.relationshipId" type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
           </div>
         </div>
       </div>
@@ -102,7 +102,7 @@
                 <span class="chip-sublabel">{{ item.label }}</span>
               </span>
             </button>
-            <button type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
+            <button *ngIf="item.relationshipId" type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
           </div>
         </div>
       </div>
