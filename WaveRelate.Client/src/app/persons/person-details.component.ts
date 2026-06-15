@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService, Person, PersonCategory } from '../api.service';
-import { computeRelationPaths, getRelationshipBucket, getRelationshipLabel, GraphEdge } from './relationship-label.util';
+import { computeRelationPaths, getExtendedFamilyRank, getRelationshipLabel, GraphEdge } from './relationship-label.util';
 
 interface Relationship {
   id: number;
@@ -104,30 +104,28 @@ export class PersonDetailsComponent {
         ]);
 
         const relationPaths = computeRelationPaths(edges, id);
-        this.extended = [];
+        const ranked: { node: FamilyTreeNode; rank: number }[] = [];
 
         for (const node of nodes) {
           if (node.id === id || directIds.has(node.id)) continue;
 
           const path = relationPaths.get(node.id);
           if (!path) {
-            this.extended.push({ ...node, label: 'Extended family' });
+            ranked.push({ node: { ...node, label: 'Extended family' }, rank: 1000 });
             continue;
           }
 
-          const bucket = getRelationshipBucket(path);
           const label = getRelationshipLabel(path, node.gender);
-          const item: RelatedPerson = { relationshipId: 0, person: node, label };
-
-          switch (bucket) {
-            case 'parent': this.parents.push(item); break;
-            case 'child': this.children.push(item); break;
-            case 'spouse': this.spouses.push(item); break;
-            case 'sibling': this.siblings.push(item); break;
-            default: this.extended.push({ ...node, label });
-          }
+          const rank = getExtendedFamilyRank(path);
+          ranked.push({ node: { ...node, label }, rank });
         }
 
+        ranked.sort((a, b) => {
+          if (a.rank !== b.rank) return a.rank - b.rank;
+          return `${a.node.firstName} ${a.node.lastName}`.localeCompare(`${b.node.firstName} ${b.node.lastName}`);
+        });
+
+        this.extended = ranked.map(r => r.node);
         this.loading = false;
       },
       error: e => { console.error(e); this.loading = false; }

@@ -263,29 +263,61 @@ export function getRelationshipLabel(path: RelationPath, gender?: string): strin
   return categorize(core, genderKey, path.siblingOrder);
 }
 
-export type RelationshipBucket = 'parent' | 'child' | 'spouse' | 'sibling' | 'extended';
-
 /**
- * Buckets a relation path into one of the primary relationship categories
- * (parent/child/spouse/sibling) or 'extended' for anything further removed.
- * Used to decide whether a family-tree member belongs in the Parents/
- * Children/Spouse/Siblings cards or the Extended family list.
+ * Computes a sort priority for a person in the Extended family list,
+ * grouping relatives by how closely related they are. Lower numbers are
+ * shown first. Rough ordering:
+ *   0-9:    siblings reached only via in-law/step paths (rare edge cases)
+ *   10-19:  ancestors beyond a parent (grandparents, great-grandparents, ...)
+ *   20-29:  aunts/uncles and grand-aunts/uncles
+ *   30-59:  cousins, grouped by degree (1st, 2nd, ...) and removal
+ *   50-59:  nephews/nieces and grand-nephews/nieces
+ *   60-69:  descendants beyond a child (grandchildren, ...)
+ *   900-969: in-law / step relations (e.g. father-in-law, step-father),
+ *            ranked the same as their underlying blood relation but pushed
+ *            after all blood relatives
+ *   1000:   anything that doesn't reduce to a simple relation
  */
-export function getRelationshipBucket(path: RelationPath): RelationshipBucket {
+export function getExtendedFamilyRank(path: RelationPath): number {
   const canonical = canonicalize(path.steps);
-  if (canonical.length === 0) return 'extended';
-
-  if (canonical.join('-') === 'spouse') return 'spouse';
+  if (canonical.length === 0) return 1000;
 
   let core = canonical;
-  if (core[0] === 'spouse') core = core.slice(1);
-  else if (core[core.length - 1] === 'spouse') core = core.slice(0, -1);
-
-  if (core.length === 1) {
-    if (core[0] === 'parent') return 'parent';
-    if (core[0] === 'child') return 'child';
-    if (core[0] === 'sibling') return 'sibling';
+  let inLaw = false;
+  if (core[0] === 'spouse') {
+    core = core.slice(1);
+    inLaw = true;
+  } else if (core[core.length - 1] === 'spouse') {
+    core = core.slice(0, -1);
+    inLaw = true;
   }
 
-  return 'extended';
+  const rank = coreRank(core);
+  return inLaw ? 900 + rank : rank;
+}
+
+function coreRank(steps: RelationStep[]): number {
+  if (steps.length === 0) return 1000;
+
+  const up = countLeading(steps, 'parent');
+  const afterUp = steps.slice(up);
+  const hasSibling = afterUp[0] === 'sibling';
+  const afterSibling = hasSibling ? afterUp.slice(1) : afterUp;
+  const down = countLeading(afterSibling, 'child');
+  const remainder = afterSibling.slice(down);
+
+  if (remainder.length > 0) return 1000;
+
+  if (up === 0 && down === 0) return hasSibling ? 5 : 1000;
+
+  if (!hasSibling) {
+    return down === 0 ? 10 + up : 60 + down;
+  }
+
+  if (down === 0) return 20 + up;
+  if (up === 0) return 50 + down;
+
+  const degree = Math.min(up, down);
+  const removed = Math.abs(up - down);
+  return 30 + degree * 5 + removed;
 }
