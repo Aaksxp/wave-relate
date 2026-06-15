@@ -111,8 +111,11 @@
 
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-body">
-      <h3 class="h6 mb-3">Extended family</h3>
-      <div class="d-flex flex-wrap gap-3">
+      <button type="button" class="btn btn-link p-0 d-flex align-items-center gap-2 text-decoration-none collapsible-header" (click)="extendedExpanded = !extendedExpanded">
+        <i class="bi" [class.bi-chevron-right]="!extendedExpanded" [class.bi-chevron-down]="extendedExpanded"></i>
+        <h3 class="h6 mb-0">Extended family</h3>
+      </button>
+      <div class="d-flex flex-wrap gap-3 mt-3" *ngIf="extendedExpanded">
         <button *ngFor="let p of extended" class="tree-chip btn btn-outline-secondary btn-sm" type="button" (click)="navigateToPerson(p.id)">{{ p.firstName }} {{ p.lastName }} <span class="tree-chip-sublabel">({{ p.label }})</span></button>
         <span *ngIf="extended.length === 0" class="text-muted">No extended family found.</span>
       </div>

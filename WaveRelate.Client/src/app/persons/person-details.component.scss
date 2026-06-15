@@ -111,3 +111,12 @@
   opacity: 0.7;
   font-size: 0.85em;
 }
+
+.collapsible-header {
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.collapsible-header:hover {
+  color: var(--accent);
+}

@@ -47,6 +47,7 @@ export class PersonDetailsComponent {
   loading = true;
   savingRelationship = false;
   relationshipError: string | null = null;
+  extendedExpanded = false;
 
   parents: RelatedPerson[] = [];
   children: RelatedPerson[] = [];
