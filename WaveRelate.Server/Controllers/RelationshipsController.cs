@@ -49,7 +49,11 @@ public class RelationshipsController : ControllerBase
             || r.RelationshipType == RelationshipType.Parent
                 && existing.PersonId == r.RelatedPersonId && existing.RelatedPersonId == r.PersonId && existing.RelationshipType == RelationshipType.Child
             || r.RelationshipType == RelationshipType.Child
-                && existing.PersonId == r.RelatedPersonId && existing.RelatedPersonId == r.PersonId && existing.RelationshipType == RelationshipType.Parent);
+                && existing.PersonId == r.RelatedPersonId && existing.RelatedPersonId == r.PersonId && existing.RelationshipType == RelationshipType.Parent
+            || r.RelationshipType == RelationshipType.ElderSibling
+                && existing.PersonId == r.RelatedPersonId && existing.RelatedPersonId == r.PersonId && existing.RelationshipType == RelationshipType.YoungerSibling
+            || r.RelationshipType == RelationshipType.YoungerSibling
+                && existing.PersonId == r.RelatedPersonId && existing.RelatedPersonId == r.PersonId && existing.RelationshipType == RelationshipType.ElderSibling);
 
         if (duplicate)
         {

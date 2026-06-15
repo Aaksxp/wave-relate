@@ -3,7 +3,7 @@
     <div class="sidebar-top">
       <button type="button" class="brand" (click)="goHome()" title="Go to home">
         <img src="/favicon.ico" alt="WaveRelate logo" class="brand-icon">
-        <span class="title">Wave Family</span>
+        <span class="title">Wave People</span>
       </button>
       <button type="button" class="collapse-toggle" (click)="toggleSidebar()" [title]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
         <i class="bi" [class.bi-chevron-right]="sidebarCollapsed" [class.bi-chevron-left]="!sidebarCollapsed"></i>
@@ -11,9 +11,13 @@
     </div>
 
     <nav class="side-nav">
-      <a routerLink="/persons" routerLinkActive="active" class="nav-link" title="People">
+      <a routerLink="/family" routerLinkActive="active" class="nav-link" title="Family">
         <i class="bi bi-people-fill"></i>
-        <span>People</span>
+        <span>Family</span>
+      </a>
+      <a routerLink="/friends" routerLinkActive="active" class="nav-link" title="Friends">
+        <i class="bi bi-person-heart"></i>
+        <span>Friends</span>
       </a>
     </nav>
 

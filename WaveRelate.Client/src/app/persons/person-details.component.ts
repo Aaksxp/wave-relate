@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ApiService, Person } from '../api.service';
+import { ApiService, Person, PersonCategory } from '../api.service';
+import { computeRelationPaths, getRelationshipLabel, GraphEdge } from './relationship-label.util';
 
 interface Relationship {
   id: number;
@@ -17,6 +18,16 @@ interface Relationship {
 interface RelatedPerson {
   relationshipId: number;
   person: Person;
+  label: string;
+}
+
+interface FamilyTreeNode {
+  id: number;
+  firstName: string;
+  lastName: string;
+  gender?: string;
+  dateOfBirth?: string;
+  label?: string;
 }
 
 @Component({
@@ -32,6 +43,7 @@ export class PersonDetailsComponent {
   allPeople: Person[] = [];
   newRelatedId: number | null = null;
   newType = 1;
+  newSiblingOrder: 'unknown' | 'elder' | 'younger' = 'unknown';
   loading = true;
   savingRelationship = false;
   relationshipError: string | null = null;
@@ -40,13 +52,7 @@ export class PersonDetailsComponent {
   children: RelatedPerson[] = [];
   spouses: RelatedPerson[] = [];
   siblings: RelatedPerson[] = [];
-
-  relationshipTypeLabels: Record<number, string> = {
-    1: 'Parent',
-    2: 'Child',
-    3: 'Spouse',
-    4: 'Sibling'
-  };
+  extended: FamilyTreeNode[] = [];
 
   constructor(private route: ActivatedRoute, private api: ApiService, public router: Router) {
     this.route.paramMap.subscribe(params => {
@@ -62,8 +68,37 @@ export class PersonDetailsComponent {
         this.person = p;
         this.loadRelationships(id);
         this.loadAllPeople(id);
+        this.loadExtendedFamily(id);
       },
       error: () => this.loading = false
+    });
+  }
+
+  private loadExtendedFamily(id: number) {
+    this.api.getFamilyTree(id).subscribe({
+      next: graph => {
+        const nodes: FamilyTreeNode[] = graph.nodes || [];
+        const edges: GraphEdge[] = (graph.edges || []).map((edge: any) => ({
+          sourceId: edge.sourceId,
+          targetId: edge.targetId,
+          relationshipType: Number(edge.relationshipType)
+        }));
+
+        const directIds = new Set<number>();
+        for (const edge of edges) {
+          if (edge.sourceId === id) directIds.add(edge.targetId);
+          if (edge.targetId === id) directIds.add(edge.sourceId);
+        }
+
+        const relationPaths = computeRelationPaths(edges, id);
+        this.extended = nodes
+          .filter(node => node.id !== id && !directIds.has(node.id))
+          .map(node => {
+            const path = relationPaths.get(node.id);
+            return { ...node, label: path ? getRelationshipLabel(path, node.gender) : 'Extended family' };
+          });
+      },
+      error: e => console.error(e)
     });
   }
 
@@ -92,33 +127,49 @@ export class PersonDetailsComponent {
       const isSource = r.personId === currentPersonId;
       const other = isSource ? r.relatedPerson : r.person;
       if (!other) continue;
-      const entry: RelatedPerson = { relationshipId: r.id, person: other };
 
       switch (r.relationshipType) {
         case 1:
           // relationshipType 1 (Parent): the related person is the parent of the source person.
           if (isSource) {
-            this.parents.push(entry);
+            this.parents.push({ relationshipId: r.id, person: other, label: getRelationshipLabel({ steps: ['parent'] }, other.gender) });
           } else {
-            this.children.push(entry);
+            this.children.push({ relationshipId: r.id, person: other, label: getRelationshipLabel({ steps: ['child'] }, other.gender) });
           }
           break;
         case 2:
           // relationshipType 2 (Child): the related person is the child of the source person.
           if (isSource) {
-            this.children.push(entry);
+            this.children.push({ relationshipId: r.id, person: other, label: getRelationshipLabel({ steps: ['child'] }, other.gender) });
           } else {
-            this.parents.push(entry);
+            this.parents.push({ relationshipId: r.id, person: other, label: getRelationshipLabel({ steps: ['parent'] }, other.gender) });
           }
           break;
         case 3:
-          this.spouses.push(entry);
+          this.spouses.push({ relationshipId: r.id, person: other, label: getRelationshipLabel({ steps: ['spouse'] }, other.gender) });
           break;
         case 4:
-          this.siblings.push(entry);
+          this.siblings.push({ relationshipId: r.id, person: other, label: getRelationshipLabel({ steps: ['sibling'], siblingOrder: this.inferSiblingOrder(other) }, other.gender) });
           break;
+        case 5: {
+          // ElderSibling: the person (source) is the elder sibling of the related person (target).
+          const siblingOrder = isSource ? 'younger' : 'elder';
+          this.siblings.push({ relationshipId: r.id, person: other, label: getRelationshipLabel({ steps: ['sibling'], siblingOrder }, other.gender) });
+          break;
+        }
+        case 6: {
+          // YoungerSibling: the person (source) is the younger sibling of the related person (target).
+          const siblingOrder = isSource ? 'elder' : 'younger';
+          this.siblings.push({ relationshipId: r.id, person: other, label: getRelationshipLabel({ steps: ['sibling'], siblingOrder }, other.gender) });
+          break;
+        }
       }
     }
+  }
+
+  private inferSiblingOrder(other: Person): 'elder' | 'younger' | undefined {
+    if (!this.person?.dateOfBirth || !other.dateOfBirth) return undefined;
+    return new Date(other.dateOfBirth) < new Date(this.person.dateOfBirth) ? 'elder' : 'younger';
   }
 
   addRelationship() {
@@ -134,13 +185,21 @@ export class PersonDetailsComponent {
 
     this.relationshipError = null;
     this.savingRelationship = true;
-    const payload = { personId: this.person.id, relatedPersonId: this.newRelatedId, relationshipType: this.newType };
+
+    let relationshipType = this.newType;
+    if (this.newType === 4) {
+      if (this.newSiblingOrder === 'elder') relationshipType = 5;
+      else if (this.newSiblingOrder === 'younger') relationshipType = 6;
+    }
+
+    const payload = { personId: this.person.id, relatedPersonId: this.newRelatedId, relationshipType };
 
     this.api.createRelationship(payload).subscribe({
       next: () => {
         this.loadRelationships(this.person!.id);
         this.newRelatedId = null;
         this.newType = 1;
+        this.newSiblingOrder = 'unknown';
         this.savingRelationship = false;
       },
       error: e => {
@@ -160,16 +219,22 @@ export class PersonDetailsComponent {
     this.router.navigate(['/persons', id, 'details']);
   }
 
+  goCreate() {
+    this.router.navigate(['/persons/new'], { queryParams: { category: this.person?.category ?? PersonCategory.Relative } });
+  }
+
+  goBack() {
+    this.router.navigate([this.person?.category === PersonCategory.Friend ? '/friends' : '/family']);
+  }
+
   getInitials(person: Person): string {
     const first = person.firstName?.charAt(0) ?? '';
     const last = person.lastName?.charAt(0) ?? '';
     return `${first}${last}`.toUpperCase();
   }
 
-  siblingLabel(person: Person): string {
-    const gender = person.gender?.toLowerCase();
-    if (gender === 'male') return 'Brother';
-    if (gender === 'female') return 'Sister';
-    return 'Sibling';
+  selectedPersonName(): string {
+    const p = this.allPeople.find(p => p.id === this.newRelatedId);
+    return p ? `${p.firstName} ${p.lastName}` : 'the selected person';
   }
 }

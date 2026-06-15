@@ -23,6 +23,8 @@ public class Person
     public string? LinkedIn { get; set; }
     public string? Notes { get; set; }
 
+    public PersonCategory Category { get; set; } = PersonCategory.Relative;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

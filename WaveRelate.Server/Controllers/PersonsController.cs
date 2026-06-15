@@ -31,6 +31,15 @@ public class PersonsController : ControllerBase
             }
         }
 
+        // optional category filter: ?category=1 (Relative) or ?category=2 (Friend)
+        if (Request.Query.ContainsKey("category"))
+        {
+            if (Enum.TryParse<PersonCategory>(Request.Query["category"].ToString(), out var category))
+            {
+                persons = persons.Where(p => p.Category == category);
+            }
+        }
+
         var list = await persons.OrderBy(p => p.LastName).ThenBy(p => p.FirstName).ToListAsync();
         return Ok(list);
     }
@@ -74,6 +83,7 @@ public class PersonsController : ControllerBase
         existing.Instagram = updated.Instagram;
         existing.LinkedIn = updated.LinkedIn;
         existing.Notes = updated.Notes;
+        existing.Category = updated.Category;
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

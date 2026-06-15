@@ -1,12 +1,17 @@
 <section class="person-details">
-  <div class="d-flex align-items-center gap-3 mb-4">
-    <button class="btn btn-outline-secondary btn-icon" title="Back" (click)="router.navigate(['/persons'])">
-      <i class="bi bi-arrow-left"></i>
-    </button>
-    <div class="d-flex align-items-center gap-3" *ngIf="person">
-      <div class="avatar-circle avatar-lg">{{ getInitials(person) }}</div>
-      <h2 class="mb-0">{{ person.firstName }} {{ person.lastName }}</h2>
+  <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-outline-secondary btn-icon" title="Back" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+      <div class="d-flex align-items-center gap-3" *ngIf="person">
+        <div class="avatar-circle avatar-lg">{{ getInitials(person) }}</div>
+        <h2 class="mb-0">{{ person.firstName }} {{ person.lastName }}</h2>
+      </div>
     </div>
+    <button class="btn btn-primary" title="Add new person" (click)="goCreate()">
+      <i class="bi bi-plus-lg"></i> New person
+    </button>
   </div>
 
   <div *ngIf="person" class="card shadow-sm border-0 mb-4">
@@ -19,15 +24,12 @@
         </div>
         <div class="col-md-4">
           <p class="h5 mb-2">Contact</p>
-          <p class="mb-1" *ngIf="person.phone"><strong>Phone:</strong> {{ person.phone }}</p>
-          <p class="mb-1" *ngIf="person.email"><strong>Email:</strong> {{ person.email }}</p>
+          <p class="mb-1" *ngIf="person.phone"><strong>Phone: </strong> {{ person.phone }}</p>
+          <p class="mb-1" *ngIf="person.email"><strong>Email: </strong> <a [href]="'mailto:' + person.email">{{ person.email }}</a></p>
           <p class="mb-1" *ngIf="person.facebook"><a [href]="person.facebook" target="_blank">Facebook profile</a></p>
           <p class="mb-1" *ngIf="person.instagram"><a [href]="person.instagram" target="_blank">Instagram profile</a></p>
           <p class="mb-1" *ngIf="person.linkedIn"><a [href]="person.linkedIn" target="_blank">LinkedIn profile</a></p>
         </div>
-      </div>
-      <div class="mt-3">
-        <button class="btn btn-outline-primary btn-sm" (click)="router.navigate(['/persons', person.id, 'family-tree'])">View family tree</button>
       </div>
     </div>
   </div>
@@ -41,7 +43,10 @@
           <div *ngFor="let item of parents" class="person-chip">
             <button type="button" class="chip-link" (click)="navigateToPerson(item.person.id)">
               <span class="chip-avatar">{{ getInitials(item.person) }}</span>
-              <span class="chip-name">{{ item.person.firstName }} {{ item.person.lastName }}</span>
+              <span class="chip-text">
+                <span class="chip-name">{{ item.person.firstName }} {{ item.person.lastName }}</span>
+                <span class="chip-sublabel">{{ item.label }}</span>
+              </span>
             </button>
             <button type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
           </div>
@@ -56,7 +61,10 @@
           <div *ngFor="let item of children" class="person-chip">
             <button type="button" class="chip-link" (click)="navigateToPerson(item.person.id)">
               <span class="chip-avatar">{{ getInitials(item.person) }}</span>
-              <span class="chip-name">{{ item.person.firstName }} {{ item.person.lastName }}</span>
+              <span class="chip-text">
+                <span class="chip-name">{{ item.person.firstName }} {{ item.person.lastName }}</span>
+                <span class="chip-sublabel">{{ item.label }}</span>
+              </span>
             </button>
             <button type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
           </div>
@@ -71,7 +79,10 @@
           <div *ngFor="let item of spouses" class="person-chip">
             <button type="button" class="chip-link" (click)="navigateToPerson(item.person.id)">
               <span class="chip-avatar">{{ getInitials(item.person) }}</span>
-              <span class="chip-name">{{ item.person.firstName }} {{ item.person.lastName }}</span>
+              <span class="chip-text">
+                <span class="chip-name">{{ item.person.firstName }} {{ item.person.lastName }}</span>
+                <span class="chip-sublabel">{{ item.label }}</span>
+              </span>
             </button>
             <button type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
           </div>
@@ -88,12 +99,22 @@
               <span class="chip-avatar">{{ getInitials(item.person) }}</span>
               <span class="chip-text">
                 <span class="chip-name">{{ item.person.firstName }} {{ item.person.lastName }}</span>
-                <span class="chip-sublabel">{{ siblingLabel(item.person) }}</span>
+                <span class="chip-sublabel">{{ item.label }}</span>
               </span>
             </button>
             <button type="button" class="chip-remove" title="Remove relationship" (click)="deleteRelationship(item.relationshipId)">&times;</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <h3 class="h6 mb-3">Extended family</h3>
+      <div class="d-flex flex-wrap gap-3">
+        <button *ngFor="let p of extended" class="tree-chip btn btn-outline-secondary btn-sm" type="button" (click)="navigateToPerson(p.id)">{{ p.firstName }} {{ p.lastName }} <span class="tree-chip-sublabel">({{ p.label }})</span></button>
+        <span *ngIf="extended.length === 0" class="text-muted">No extended family found.</span>
       </div>
     </div>
   </div>
@@ -116,6 +137,14 @@
             <option [ngValue]="2">Child</option>
             <option [ngValue]="3">Spouse</option>
             <option [ngValue]="4">Sibling</option>
+          </select>
+        </div>
+        <div class="col-md-3" *ngIf="newType === 4">
+          <label class="form-label">Age order</label>
+          <select class="form-select" [(ngModel)]="newSiblingOrder" name="siblingOrder">
+            <option value="unknown">Order unknown</option>
+            <option value="elder">{{ person?.firstName }} is older than {{ selectedPersonName() }}</option>
+            <option value="younger">{{ person?.firstName }} is younger than {{ selectedPersonName() }}</option>
           </select>
         </div>
         <div class="col-md-3">

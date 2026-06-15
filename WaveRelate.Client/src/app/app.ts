@@ -34,7 +34,7 @@ export class App implements OnInit {
   }
 
   goHome() {
-    this.router.navigate(['/persons']);
+    this.router.navigate(['/family']);
   }
 
   private applyTheme() {

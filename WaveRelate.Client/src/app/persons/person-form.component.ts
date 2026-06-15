@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule, NgForm } from '@angular/forms';
-import { ApiService, Person } from '../api.service';
+import { ApiService, Person, PersonCategory } from '../api.service';
 
 @Component({
   selector: 'app-person-form',
@@ -17,7 +17,11 @@ export class PersonFormComponent {
   saving = false;
   isNew = false;
   error: string | null = null;
-  genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
+  genderOptions = ['Male', 'Female'];
+  categoryOptions = [
+    { value: PersonCategory.Relative, label: 'Relative' },
+    { value: PersonCategory.Friend, label: 'Friend' }
+  ];
 
   constructor(private route: ActivatedRoute, private api: ApiService, private router: Router) {
     this.load();
@@ -27,6 +31,8 @@ export class PersonFormComponent {
     const id = this.route.snapshot.paramMap.get('id');
     if (id === 'new' || id === null) {
       this.isNew = true;
+      const categoryParam = Number(this.route.snapshot.queryParamMap.get('category'));
+      this.model.category = categoryParam === PersonCategory.Friend ? PersonCategory.Friend : PersonCategory.Relative;
       this.loading = false;
       return;
     }
@@ -54,19 +60,23 @@ export class PersonFormComponent {
     this.saving = true;
     if (this.isNew) {
       this.api.createPerson(this.model).subscribe({
-        next: () => this.router.navigate(['/persons']),
+        next: () => this.goToList(),
         error: (e) => { console.error(e); this.error = 'Failed to save person.'; this.saving = false; }
       });
     } else {
       const id = Number(this.route.snapshot.paramMap.get('id'));
       this.api.updatePerson(id, this.model).subscribe({
-        next: () => this.router.navigate(['/persons']),
+        next: () => this.goToList(),
         error: (e) => { console.error(e); this.error = 'Failed to save person.'; this.saving = false; }
       });
     }
   }
 
   cancel() {
-    this.router.navigate(['/persons']);
+    this.goToList();
+  }
+
+  private goToList() {
+    this.router.navigate([this.model.category === PersonCategory.Friend ? '/friends' : '/family']);
   }
 }

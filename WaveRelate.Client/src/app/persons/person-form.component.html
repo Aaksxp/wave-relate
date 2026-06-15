@@ -9,6 +9,14 @@
   <div *ngIf="loading" class="text-muted">Loading...</div>
 
   <form *ngIf="!loading" #personForm="ngForm" (ngSubmit)="save(personForm)">
+    
+      <div class=" col-md-3">
+        <label class="form-label">Category</label>
+        <select required class="form-select" [(ngModel)]="model.category" name="category">
+          <option *ngFor="let c of categoryOptions" [ngValue]="c.value">{{ c.label }}</option>
+        </select>
+      </div>
+      <br />
     <div class="row g-3">
       <div class="col-md-6">
         <label class="form-label">First name</label>
@@ -27,15 +35,16 @@
       </div>
       <div class="col-md-6">
         <label class="form-label">Phone</label>
-        <input type="tel" pattern="[0-9()+\-\s]*" class="form-control" [(ngModel)]="model.phone" name="phone" #phone="ngModel" />
-        <div *ngIf="phone.invalid && phone.touched" class="invalid-feedback d-block">Enter a valid phone number.</div>
+        <input type="tel" pattern="[0-9]{10}" maxlength="10" class="form-control" [(ngModel)]="model.phone" name="phone" #phone="ngModel" />
+        <div *ngIf="phone.invalid && phone.touched" class="invalid-feedback d-block">Enter a valid 10-digit phone number.</div>
       </div>
       <div class="col-md-6">
         <label class="form-label">Gender</label>
-        <select class="form-select" [(ngModel)]="model.gender" name="gender">
+        <select required class="form-select" [(ngModel)]="model.gender" name="gender" #genderField="ngModel">
           <option value="">Choose gender</option>
-          <option *ngFor="let gender of genderOptions" [value]="gender">{{ gender }}</option>
+          <option *ngFor="let g of genderOptions" [value]="g">{{ g }}</option>
         </select>
+        <div *ngIf="genderField.invalid && genderField.touched" class="invalid-feedback d-block">Gender is required.</div>
       </div>
       <div class="col-md-6">
         <label class="form-label">Date of birth</label>

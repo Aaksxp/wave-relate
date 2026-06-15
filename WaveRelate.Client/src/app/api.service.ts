@@ -2,6 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../environments/environment';
 
+export enum PersonCategory {
+  Relative = 1,
+  Friend = 2
+}
+
 export interface Person {
   id: number;
   firstName: string;
@@ -14,6 +19,7 @@ export interface Person {
   instagram?: string;
   linkedIn?: string;
   notes?: string;
+  category?: PersonCategory;
 }
 
 export interface Summary {
@@ -27,12 +33,14 @@ export class ApiService {
 
   constructor(private readonly http: HttpClient) {}
 
-  getPeople() {
-    return this.http.get<Person[]>(this.apiUrl);
+  getPeople(category?: PersonCategory) {
+    const url = category ? `${this.apiUrl}?category=${category}` : this.apiUrl;
+    return this.http.get<Person[]>(url);
   }
 
-  getPeopleByQuery(q: string) {
-    const url = `${this.apiUrl}?q=${encodeURIComponent(q)}`;
+  getPeopleByQuery(q: string, category?: PersonCategory) {
+    let url = `${this.apiUrl}?q=${encodeURIComponent(q)}`;
+    if (category) url += `&category=${category}`;
     return this.http.get<Person[]>(url);
   }
 

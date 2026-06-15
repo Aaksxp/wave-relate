@@ -26,6 +26,7 @@ public class FamilyTreeContext : DbContext
             entity.Property(p => p.Instagram).HasMaxLength(200);
             entity.Property(p => p.LinkedIn).HasMaxLength(200);
             entity.Property(p => p.Notes).HasMaxLength(2000);
+            entity.Property(p => p.Category).HasDefaultValue(PersonCategory.Relative);
         });
 
           modelBuilder.Entity<Relationship>(entity =>

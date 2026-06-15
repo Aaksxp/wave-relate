@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { ApiService, Person } from '../api.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ApiService, Person, PersonCategory } from '../api.service';
 
 @Component({
   selector: 'app-persons',
@@ -15,24 +15,28 @@ export class PersonsComponent {
   people: Person[] = [];
   loading = true;
   q = '';
+  category: PersonCategory = PersonCategory.Relative;
+  title = 'Family';
 
-  constructor(private readonly api: ApiService, public router: Router) {
+  constructor(private readonly route: ActivatedRoute, private readonly api: ApiService, public router: Router) {
+    this.category = this.route.snapshot.data['category'] ?? PersonCategory.Relative;
+    this.title = this.category === PersonCategory.Friend ? 'Friends' : 'Family';
     this.load();
   }
 
   load() {
     this.loading = true;
-    this.api.getPeople().subscribe({ next: (r) => { this.people = r; this.loading = false; }, error: () => this.loading = false });
+    this.api.getPeople(this.category).subscribe({ next: (r) => { this.people = r; this.loading = false; }, error: () => this.loading = false });
   }
 
   search() {
     if (!this.q) { this.load(); return; }
     this.loading = true;
-    this.api.getPeopleByQuery(this.q).subscribe({ next: (r) => { this.people = r; this.loading = false; }, error: () => this.loading = false });
+    this.api.getPeopleByQuery(this.q, this.category).subscribe({ next: (r) => { this.people = r; this.loading = false; }, error: () => this.loading = false });
   }
 
   goCreate() {
-    this.router.navigate(['/persons', 'new']);
+    this.router.navigate(['/persons', 'new'], { queryParams: { category: this.category } });
   }
 
   edit(p: Person) {
