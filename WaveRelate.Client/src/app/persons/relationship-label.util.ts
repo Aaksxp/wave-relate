@@ -263,6 +263,28 @@ export function getRelationshipLabel(path: RelationPath, gender?: string): strin
   return categorize(core, genderKey, path.siblingOrder);
 }
 
+export type RelationshipBucket = 'parent' | 'child' | 'spouse' | 'sibling' | 'extended';
+
+/**
+ * Buckets a relation path into Parents/Children/Spouse/Siblings or
+ * 'extended'. Only paths that canonicalize to a single direct step
+ * (parent/child/spouse/sibling) belong in the main family cards -
+ * everything else (in-laws, step-relations, grandparents, cousins, etc.)
+ * is 'extended'.
+ */
+export function getRelationshipBucket(path: RelationPath): RelationshipBucket {
+  const canonical = canonicalize(path.steps);
+  if (canonical.length === 1) {
+    switch (canonical[0]) {
+      case 'parent': return 'parent';
+      case 'child': return 'child';
+      case 'spouse': return 'spouse';
+      case 'sibling': return 'sibling';
+    }
+  }
+  return 'extended';
+}
+
 /**
  * Computes a sort priority for a person in the Extended family list,
  * grouping relatives by how closely related they are. Lower numbers are

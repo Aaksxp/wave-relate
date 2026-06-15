@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService, Person, PersonCategory } from '../api.service';
-import { computeRelationPaths, getExtendedFamilyRank, getRelationshipLabel, GraphEdge } from './relationship-label.util';
+import { computeRelationPaths, getExtendedFamilyRank, getRelationshipBucket, getRelationshipLabel, GraphEdge } from './relationship-label.util';
 
 interface Relationship {
   id: number;
@@ -116,6 +116,16 @@ export class PersonDetailsComponent {
           }
 
           const label = getRelationshipLabel(path, node.gender);
+          const bucket = getRelationshipBucket(path);
+          const item: RelatedPerson = { relationshipId: 0, person: node, label };
+
+          switch (bucket) {
+            case 'parent': this.parents.push(item); continue;
+            case 'child': this.children.push(item); continue;
+            case 'spouse': this.spouses.push(item); continue;
+            case 'sibling': this.siblings.push(item); continue;
+          }
+
           const rank = getExtendedFamilyRank(path);
           ranked.push({ node: { ...node, label }, rank });
         }
