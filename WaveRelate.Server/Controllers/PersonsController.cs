@@ -96,6 +96,11 @@ public class PersonsController : ControllerBase
         var existing = await _context.Persons.FindAsync(id);
         if (existing is null) return NotFound();
 
+        var relationships = await _context.Relationships
+            .Where(r => r.PersonId == id || r.RelatedPersonId == id)
+            .ToListAsync();
+        _context.Relationships.RemoveRange(relationships);
+
         _context.Persons.Remove(existing);
         await _context.SaveChangesAsync();
         return NoContent();
