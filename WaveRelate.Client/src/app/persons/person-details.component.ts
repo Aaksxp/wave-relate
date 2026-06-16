@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ApiService, Person, PersonCategory } from '../api.service';
+import { ApiService, ImportantDate, Person, PersonCategory } from '../api.service';
 import { computeRelationPaths, getExtendedFamilyRank, getRelationshipBucket, getRelationshipLabel, GraphEdge } from './relationship-label.util';
 
 interface Relationship {
@@ -48,6 +48,10 @@ export class PersonDetailsComponent {
   savingRelationship = false;
   relationshipError: string | null = null;
   extendedExpanded = false;
+  importantDates: ImportantDate[] = [];
+  newDateLabel = '';
+  newDateValue = '';
+  savingDate = false;
 
   parents: RelatedPerson[] = [];
   children: RelatedPerson[] = [];
@@ -69,9 +73,33 @@ export class PersonDetailsComponent {
         this.person = p;
         this.loadAllPeople(id);
         this.refreshFamily(id);
+        this.loadImportantDates(id);
       },
       error: () => this.loading = false
     });
+  }
+
+  loadImportantDates(id: number) {
+    this.api.getImportantDates(id).subscribe({ next: d => this.importantDates = d });
+  }
+
+  addImportantDate() {
+    if (!this.person || !this.newDateLabel.trim() || !this.newDateValue) return;
+    this.savingDate = true;
+    this.api.createImportantDate({ personId: this.person.id, label: this.newDateLabel.trim(), date: this.newDateValue }).subscribe({
+      next: () => {
+        this.loadImportantDates(this.person!.id);
+        this.newDateLabel = '';
+        this.newDateValue = '';
+        this.savingDate = false;
+      },
+      error: () => { this.savingDate = false; }
+    });
+  }
+
+  deleteImportantDate(id: number) {
+    if (!confirm('Remove this date?')) return;
+    this.api.deleteImportantDate(id).subscribe({ next: () => this.loadImportantDates(this.person!.id) });
   }
 
   refreshFamily(id: number) {
@@ -143,7 +171,7 @@ export class PersonDetailsComponent {
   }
 
   loadAllPeople(currentPersonId: number) {
-    this.api.getPeople().subscribe({
+    this.api.getPeople(this.person?.category).subscribe({
       next: p => {
         this.allPeople = p
           .filter(person => person.id !== currentPersonId)

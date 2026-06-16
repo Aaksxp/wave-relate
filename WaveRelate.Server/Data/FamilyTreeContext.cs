@@ -12,6 +12,7 @@ public class FamilyTreeContext : DbContext
 
     public DbSet<Person> Persons { get; set; } = null!;
     public DbSet<Relationship> Relationships { get; set; } = null!;
+    public DbSet<ImportantDate> ImportantDates { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,6 +28,15 @@ public class FamilyTreeContext : DbContext
             entity.Property(p => p.LinkedIn).HasMaxLength(200);
             entity.Property(p => p.Notes).HasMaxLength(2000);
             entity.Property(p => p.Category).HasDefaultValue(PersonCategory.Relative);
+            entity.Property(p => p.IsHidden).HasDefaultValue(false);
+        });
+
+        modelBuilder.Entity<ImportantDate>(entity =>
+        {
+            entity.Property(d => d.Label).HasMaxLength(100).IsRequired();
+            entity.HasOne(d => d.Person).WithMany(p => p.ImportantDates)
+                .HasForeignKey(d => d.PersonId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
           modelBuilder.Entity<Relationship>(entity =>

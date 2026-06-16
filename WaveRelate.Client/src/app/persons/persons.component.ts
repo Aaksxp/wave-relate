@@ -26,13 +26,17 @@ export class PersonsComponent {
 
   load() {
     this.loading = true;
-    this.api.getPeople(this.category).subscribe({ next: (r) => { this.people = r; this.loading = false; }, error: () => this.loading = false });
+    this.api.getPeople(this.category).subscribe({ next: (r) => { this.people = this.sortAlpha(r); this.loading = false; }, error: () => this.loading = false });
   }
 
   search() {
     if (!this.q) { this.load(); return; }
     this.loading = true;
-    this.api.getPeopleByQuery(this.q, this.category).subscribe({ next: (r) => { this.people = r; this.loading = false; }, error: () => this.loading = false });
+    this.api.getPeopleByQuery(this.q, this.category).subscribe({ next: (r) => { this.people = this.sortAlpha(r); this.loading = false; }, error: () => this.loading = false });
+  }
+
+  private sortAlpha(people: any[]) {
+    return people.slice().sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
   }
 
   goCreate() {

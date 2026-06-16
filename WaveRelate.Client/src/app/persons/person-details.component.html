@@ -20,7 +20,7 @@
         <div class="col-md-8">
           <p class="h5 mb-1">Profile</p>
           <p class="text-muted mb-1">{{ person.gender || 'Gender not set' }}</p>
-          <p class="text-muted mb-0" *ngIf="person.dateOfBirth">DOB: {{ person.dateOfBirth | date:'mediumDate' }}</p>
+          <p class="text-muted mb-0" *ngIf="person.dateOfBirth">DOB: {{ person.dateOfBirth | date:'dd/MM/yyyy' }}</p>
         </div>
         <div class="col-md-4">
           <p class="h5 mb-2">Contact</p>
@@ -118,6 +118,34 @@
       <div class="d-flex flex-wrap gap-3 mt-3" *ngIf="extendedExpanded">
         <button *ngFor="let p of extended" class="tree-chip btn btn-outline-secondary btn-sm" type="button" (click)="navigateToPerson(p.id)">{{ p.firstName }} {{ p.lastName }} <span class="tree-chip-sublabel">({{ p.label }})</span></button>
         <span *ngIf="extended.length === 0" class="text-muted">No extended family found.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="h6 mb-0">Important dates</h3>
+      </div>
+      <div class="mb-3">
+        <div *ngFor="let d of importantDates" class="d-flex align-items-center gap-2 py-1 border-bottom">
+          <span class="flex-grow-1"><strong>{{ d.label }}</strong> &mdash; {{ d.date | date:'dd/MM/yyyy' }}</span>
+          <button type="button" class="chip-remove" title="Remove" (click)="deleteImportantDate(d.id)">&times;</button>
+        </div>
+        <div *ngIf="importantDates.length === 0" class="text-muted small">No important dates added.</div>
+      </div>
+      <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+          <input class="form-control form-control-sm" placeholder="Label (e.g. Anniversary)" [(ngModel)]="newDateLabel" name="newDateLabel" />
+        </div>
+        <div class="col-md-4">
+          <input type="date" class="form-control form-control-sm" [(ngModel)]="newDateValue" name="newDateValue" />
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-outline-primary btn-sm w-100" [disabled]="savingDate || !newDateLabel.trim() || !newDateValue" (click)="addImportantDate()">
+            <i class="bi bi-plus"></i> Add date
+          </button>
+        </div>
       </div>
     </div>
   </div>

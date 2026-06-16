@@ -40,6 +40,12 @@ public class PersonsController : ControllerBase
             }
         }
 
+        // hide hidden people unless explicitly requested
+        if (!Request.Query.ContainsKey("includeHidden"))
+        {
+            persons = persons.Where(p => !p.IsHidden);
+        }
+
         var list = await persons.OrderBy(p => p.LastName).ThenBy(p => p.FirstName).ToListAsync();
         return Ok(list);
     }
@@ -84,6 +90,7 @@ public class PersonsController : ControllerBase
         existing.LinkedIn = updated.LinkedIn;
         existing.Notes = updated.Notes;
         existing.Category = updated.Category;
+        existing.IsHidden = updated.IsHidden;
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

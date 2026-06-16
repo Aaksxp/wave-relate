@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WaveRelate.Server.Data;
 
@@ -11,9 +12,11 @@ using WaveRelate.Server.Data;
 namespace WaveRelate.Data.Migrations
 {
     [DbContext(typeof(FamilyTreeContext))]
-    partial class FamilyTreeContextModelSnapshot : ModelSnapshot
+    [Migration("20260616080923_AddImportantDatesAndPersonFlags")]
+    partial class AddImportantDatesAndPersonFlags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,6 +93,11 @@ namespace WaveRelate.Data.Migrations
                     b.Property<string>("Instagram")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<bool>("IsHidden")
                         .ValueGeneratedOnAdd()

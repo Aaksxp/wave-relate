@@ -1,0 +1,46 @@
+<section class="events-page">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h2 class="mb-1">Important Days</h2>
+      <p class="text-muted mb-0">Find birthdays and special dates for any day of the year.</p>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <div class="d-flex gap-3 align-items-end">
+        <div>
+          <label class="form-label fw-semibold">Select a date</label>
+          <input type="date" class="form-control" [(ngModel)]="selectedDate" name="selectedDate" />
+        </div>
+        <button class="btn btn-primary" (click)="search()" [disabled]="loading || !selectedDate">
+          <i class="bi bi-search"></i> Find
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="text-muted">Searching...</div>
+  }
+
+  @if (!loading && searched) {
+    @if (events.length === 0) {
+      <div class="text-muted card shadow-sm border-0 p-4">No birthdays or important dates on this day.</div>
+    } @else {
+      <div class="list-group shadow-sm">
+        @for (e of events; track e.personId + e.occasion) {
+          <div class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
+               role="button" (click)="navigateToPerson(e.personId)">
+            <div class="avatar-circle avatar-sm">{{ getInitials(e) }}</div>
+            <div class="flex-grow-1">
+              <div class="fw-semibold">{{ e.firstName }} {{ e.lastName }}</div>
+              <div class="text-muted small">{{ e.occasion }}</div>
+            </div>
+            <div class="text-muted small">{{ e.date | date:'dd/MM/yyyy' }}</div>
+          </div>
+        }
+      </div>
+    }
+  }
+</section>

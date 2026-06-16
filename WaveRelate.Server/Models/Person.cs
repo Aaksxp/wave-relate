@@ -24,7 +24,10 @@ public class Person
     public string? Notes { get; set; }
 
     public PersonCategory Category { get; set; } = PersonCategory.Relative;
+    public bool IsHidden { get; set; } = false;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    public ICollection<ImportantDate> ImportantDates { get; set; } = new List<ImportantDate>();
 }

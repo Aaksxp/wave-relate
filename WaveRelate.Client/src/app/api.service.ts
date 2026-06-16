@@ -20,6 +20,22 @@ export interface Person {
   linkedIn?: string;
   notes?: string;
   category?: PersonCategory;
+  isHidden?: boolean;
+}
+
+export interface ImportantDate {
+  id: number;
+  personId: number;
+  label: string;
+  date: string;
+}
+
+export interface EventEntry {
+  personId: number;
+  firstName: string;
+  lastName: string;
+  occasion: string;
+  date: string;
 }
 
 export interface Summary {
@@ -79,5 +95,23 @@ export class ApiService {
 
   getSummary() {
     return this.http.get<Summary>(`${environment.apiBaseUrl}/summary`);
+  }
+
+  // Important dates
+  getImportantDates(personId: number) {
+    return this.http.get<ImportantDate[]>(`${environment.apiBaseUrl}/importantdates/by-person/${personId}`);
+  }
+
+  createImportantDate(payload: { personId: number; label: string; date: string }) {
+    return this.http.post<ImportantDate>(`${environment.apiBaseUrl}/importantdates`, payload);
+  }
+
+  deleteImportantDate(id: number) {
+    return this.http.delete(`${environment.apiBaseUrl}/importantdates/${id}`);
+  }
+
+  // Events: birthdays + important dates matching a date (month+day)
+  getEvents(date: string) {
+    return this.http.get<EventEntry[]>(`${environment.apiBaseUrl}/events?date=${encodeURIComponent(date)}`);
   }
 }
